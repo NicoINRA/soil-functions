@@ -1,0 +1,94 @@
+
+#some default parameters consistent with a silty clay loam soil
+
+tfc<-261.28
+
+tsc<-343.8
+twp<-158.14
+Ksat=1.69
+b_camp=6
+method="VG"
+SWS=SWS
+I=0.5
+n=1.55
+La=5300
+b=4.25
+r=3
+psie=0.04
+SWS=261
+
+
+#Global function for computing soil k K and psi with different methods
+SoilHydrauComp<-function(Ksat=Ksat, I=I,n=n, La=La, b=b, r=r, psie=psie, SWS=SWS, tsc=tsc,twp=twp, b_camp=b_camp, method="VG")
+{
+  #---------------------------------------------------------------------------------------------------------------------------
+  # DESCRIPTION
+  # Psoil.comp() permit to compute soil matrix water potential from soil water content and a set of soil parameters according 
+  # to the formulation from Van Genuchten 1980
+  # (later I'll include another formalation from Campbell et al 1985)
+  #---------------------------------------------------------------------------------------------------------------------------
+  
+  #---------------------------------------------------------------------------------------------------------------------------
+  # PARAMETERS
+  # alfa (unitless): shape paramter (0.015 in Sur_eau)
+  # n (unitless): shape paramter (1.253 in Sur_eau)
+  # m (unitless): shape parameter usually computed from n as m=(1-1/n)
+  #---------------------------------------------------------------------------------------------------------------------------
+  
+  # REW
+  # I
+  # n
+  # m
+  
+  #Soil water holding capacity  
+  TotalAvailWater<-(tsc-twp)
+  #Compute the relative water content (m3 water/m3 soil) based on Water Reserve and soil volume 
+  ActualAvailWater<-SWS-twp
+  REW=ActualAvailWater/TotalAvailWater
+  
+  #---------------------------------------------------------------------------------------------------------------------------
+  #Computation of soil water potential, from Van Genuchten 1980
+  if (method=="VG"){
+    m=(1-1/n)
+    Psoil=-1*((((1/REW)^(1/m))-1)^(1/n))/alfa/10000
+  } 
+  #-----------------------------------------  
+  #Campbell
+  if (method=="Camp"){
+    
+    Psoil=-1*(psie*((SWS/tsc)^-b_camp))
+    
+  } 
+  
+  
+  #-----------------------------------------  
+  #-----------------------------------------  
+  #-----------------------------------------  
+  
+  
+  # Compute soil conductivity (mmol/m/s/MPa)
+  # Soil Ks (mmol/m/s/MPa) computed from Ksat and the conductance factor (cond fac)
+  # CondFac upscaling factors at the rhizophere with roots dimensions
+  # CondFac depends on b (root radius) r (distance between roots) and La (root length per area)
+  #Generic conductance factor for upsacling conductivity to rhizophere 
+  #(gardner cowan 1960 model)
+  CondFac= 1000*La*2*3.14/log(b/r)  #Soil Ks (mmol/m/s/MPa)
+  Ks=Ksat*CondFac
+  #Compute soil hydraulic conductivity with Van Genuchten
+  if(method=="VG")
+  {
+    m=(1-1/n)
+    ksoil=REW^(I)*(1-(1-REW^(1/m))^m)^2
+  }
+  #Compute soil hydraulic conductivity with campbell
+  if (method== "camp") 
+  {
+    ksoil=(SWStemp/tsc)^(b_camp*2+2)
+  }
+  #Compute Rhizosphere conductance
+  Ksoil=Ks*ksoil
+  
+  
+  return(c(Psoil, Ksoil))
+  
+}
