@@ -30,8 +30,8 @@ SoilHydrauComp<-function(Ksat=Ksat, I=I,n=n, La=La, b=b, r=r, psie=psie, SWS=SWS
   
   #---------------------------------------------------------------------------------------------------------------------------
   # PARAMETERS
-  # alfa (unitless): shape paramter (0.015 in Sur_eau)
-  # n (unitless): shape paramter (1.253 in Sur_eau)
+  # alfa (unitless): shape paramter (0.015 should be multiplied by 10000 to get MPa)
+  # n (unitless): shape paramter (1.253 )
   # m (unitless): shape parameter usually computed from n as m=(1-1/n)
   #---------------------------------------------------------------------------------------------------------------------------
   
@@ -50,8 +50,9 @@ SoilHydrauComp<-function(Ksat=Ksat, I=I,n=n, La=La, b=b, r=r, psie=psie, SWS=SWS
   #Computation of soil water potential, from Van Genuchten 1980
   if (method=="VG"){
     m=(1-1/n)
-    Psoil=-1*((((1/REW)^(1/m))-1)^(1/n))/alfa/10000
+    Psoil=-1*((((1/REW)^(1/m))-1)^(1/n))/alfa/10000 # divided by 10000 to compensae for the unit of alfa (no need to divide by 10000 if alfa is 10000 times greater)
   } 
+  #psi = -(1.0/alfa*10000)*(REW^(-1/m) - 1)^(1.0/n) 
   #-----------------------------------------  
   #Campbell
   if (method=="Camp"){
